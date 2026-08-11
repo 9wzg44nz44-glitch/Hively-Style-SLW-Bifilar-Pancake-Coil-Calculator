@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hively-Style Bifilar Pancake Coil & RG-405 Transmitter Calculator</title>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --card: #1a2332;
+            --accent: #3b82f6;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #60a5fa; }
+        h2 { font-size: 1.25rem; margin: 1.5rem 0 0.75rem; color: #93c5fd; border-bottom: 1px solid #334155; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.05rem; margin: 1rem 0 0.5rem; color: #a5b4fc; }
+        p, li { color: var(--muted); margin-bottom: 0.6rem; }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+            border: 1px solid #334155;
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+        label { display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--text); }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
+        select, input[type="number"] {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: var(--text);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 200px;
+        }
+        .value-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--success);
+            margin: 0.3rem 0 0.8rem;
+        }
+        .formula { background: #0f172a; padding: 0.75rem; border-radius: 8px; font-family: ui-monospace, monospace; font-size: 0.9rem; overflow-x: auto; margin: 0.5rem 0; }
+        .warning { color: var(--warning); font-weight: 600; }
+        .note { font-size: 0.9rem; border-left: 3px solid var(--accent); padding-left: 0.75rem; margin: 0.75rem 0; }
+        ul { padding-left: 1.25rem; }
+        table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.95rem; }
+        th, td { padding: 0.45rem 0.6rem; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: #93c5fd; }
+        .highlight { background: #1e3a5f; }
+        footer { margin-top: 2rem; font-size: 0.85rem; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Hively-Style SLW Bifilar Pancake Coil Calculator</h1>
+    <p>Interactive design aid for a receive bifilar pancake coil facing a spherical wavefront from an RG-405/U center-conductor stub transmitter (Hively-style scalar-longitudinal wave experiments). Designed with long-range (e.g. 500 km) far-field detection in mind.</p>
+
+    <div class="card">
+        <h2>1. Operating Frequency</h2>
+        <label for="freq">Transmit frequency (GHz)</label>
+        <input type="range" id="freq" min="0.5" max="10" step="0.05" value="2.45">
+        <div class="value-display" id="freqVal">2.45 GHz</div>
+        <div class="formula">λ = c / f &nbsp;&nbsp;|&nbsp;&nbsp; c = 299 792 458 m/s</div>
+        <p>Wavelength λ = <span id="lambda" class="value-display" style="display:inline;font-size:1rem">122.4 mm</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Near-Field vs Far-Field Boundaries</h2>
+        <p>Because you intend detection at very long range (hundreds of km), it is useful to know where the classical near- and far-field regions end. These boundaries are calculated from the maximum dimension <em>D</em> of the radiating/receiving structure and the wavelength.</p>
+        
+        <div class="formula">
+            Reactive near-field ≈ r &lt; 0.62 √(D³ / λ)<br>
+            Radiating near-field (Fresnel) ≈ 0.62 √(D³ / λ) &lt; r &lt; 2 D² / λ<br>
+            Far-field (Fraunhofer) begins at r &gt; 2 D² / λ<br>
+            For electrically-small antennas (D ≪ λ) a practical rule-of-thumb is r ≈ λ / (2π) ≈ 0.16 λ
+        </div>
+
+        <table>
+            <tr><th>Structure</th><th>Max dimension D</th><th>Reactive NF ends</th><th>Far-field begins (2D²/λ)</th><th>λ/(2π) rule</th></tr>
+            <tr>
+                <td>Transmit stub</td>
+                <td id="dStub">—</td>
+                <td id="nfStub">—</td>
+                <td id="ffStub">—</td>
+                <td id="smallStub">—</td>
+            </tr>
+            <tr class="highlight">
+                <td>Receive bifilar coil</td>
+                <td id="dCoil">—</td>
+                <td id="nfCoil">—</td>
+                <td id="ffCoil">—</td>
+                <td id="smallCoil">—</td>
+            </tr>
+        </table>
+
+        <p class="warning" style="margin-top:0.8rem">At 500 km the link is deep in the far field for any practical microwave coil or stub size. Classical spherical-wave 1/r (field) or 1/r² (power) spreading applies in the far-field region. SLW theory predicts different attenuation behavior (often claimed closer to 1/r² for power even through conducting media), but the geometric near/far boundary is still a useful reference for when the wavefront becomes locally planar.</p>
+        <div class="note">The values above update automatically with frequency, stub length, and coil outer diameter.</div>
+    </div>
+
+    <div class="card">
+        <h2>2. Transmitter: Exposed Center Conductor of RG-405/U</h2>
+        <p>RG-405/U (0.086" semi-rigid) fixed dimensions:</p>
+        <ul>
+            <li>Center conductor diameter: <strong>0.020 in (0.51 mm)</strong> silver-plated copper-clad steel</li>
+            <li>Dielectric OD: ~0.066 in (1.68 mm)</li>
+            <li>Outer conductor OD: ~0.0865 in (2.20 mm)</li>
+        </ul>
+        <label for="stubFrac">Exposed stub length as fraction of λ</label>
+        <input type="range" id="stubFrac" min="0.05" max="0.5" step="0.01" value="0.25">
+        <div class="value-display" id="stubFracVal">λ/4 (0.25 λ)</div>
+        <p>Recommended exposed center-conductor length: <span id="stubLen" class="value-display" style="display:inline;font-size:1rem">30.6 mm</span></p>
+        <div class="note">For SLW monopole-like launch, a short stub (λ/10–λ/4) with a skirt balun on the outer conductor is typical in Hively’s work. The spherical wavefront originates approximately from the tip of the exposed center conductor.</div>
+    </div>
+
+    <div class="card">
+        <h2>3. Bifilar Pancake Coil Dimensions</h2>
+        <p><strong>Should the outer diameter be a full or partial wavelength?</strong></p>
+        <p>For a pancake coil facing a spherically spreading wavefront from a small stub, a <span class="warning">partial wavelength</span> (typically 0.1 λ to 0.3 λ outer diameter) is preferred. A full-wavelength diameter becomes large, moves the structure into the far-field regime for TEM components, and is less matched to the curvature of the near-zone longitudinal gradient. Because the bifilar is designed for B-field cancellation and gradient-driven (longitudinal) response, electrically-small to moderately-small sizes work well and keep the coil practical.</p>
+
+        <div class="grid">
+            <div>
+                <label for="odFrac">Outer diameter as fraction of λ</label>
+                <input type="range" id="odFrac" min="0.05" max="0.6" step="0.01" value="0.15">
+                <div class="value-display" id="odFracVal">0.15 λ</div>
+            </div>
+            <div>
+                <label for="awg">Magnet wire gauge (AWG)</label>
+                <select id="awg">
+                    <option value="22">22 AWG</option>
+                    <option value="24" selected>24 AWG</option>
+                    <option value="26">26 AWG</option>
+                    <option value="28">28 AWG</option>
+                </select>
+            </div>
+        </div>
+
+        <label for="turns">Approximate number of bifilar turns (each “turn” is one pair of wires)</label>
+        <input type="range" id="turns" min="5" max="80" step="1" value="20">
+        <div class="value-display" id="turnsVal">20 turns</div>
+
+        <table>
+            <tr><th>Parameter</th><th>Value</th></tr>
+            <tr><td>Outer diameter (OD)</td><td id="odMm">—</td></tr>
+            <tr><td>Approximate inner diameter (ID) start</td><td id="idMm">—</td></tr>
+            <tr class="highlight"><td>Wire OD (single-build approx.)</td><td id="wireOd">—</td></tr>
+            <tr><td>Radial build (two wires side-by-side per turn)</td><td id="radial">—</td></tr>
+            <tr class="highlight"><td>Total wire length required (TWO wires)</td><td id="totalLen">—</td></tr>
+            <tr><td>Length per individual wire</td><td id="oneWire">—</td></tr>
+        </table>
+        <div class="note warning">Important: You need two separate lengths of magnet wire. The total length shown is the sum of both wires. Buy at least 10–15 % extra for leads and scrap.</div>
+    </div>
+
+    <div class="card">
+        <h2>4. How to Wind the Bifilar Pancake & Assign Polarity</h2>
+        <h3>Winding method (flat spiral / pancake)</h3>
+        <ol>
+            <li>Take two equal lengths of the chosen magnet wire (call them Wire A and Wire B). Optionally lightly twist them together every few cm for handling, but keep them parallel and side-by-side for the winding.</li>
+            <li>Start at the center (inner radius). Secure both free ends (these will be the two inner leads).</li>
+            <li>Wind outward in a flat spiral, keeping the two wires adjacent (side-by-side) so that each “turn” consists of A then B (or B then A) alternating radially. This produces the alternating-conductor geometry described by Hively: adjacent turns carry opposite current when properly connected.</li>
+            <li>Continue until the desired outer diameter is reached. Leave two outer leads.</li>
+        </ol>
+
+        <h3>Polarity / connection for opposing currents (B-field cancellation)</h3>
+        <p>To obtain counter-going currents in adjacent turns:</p>
+        <ul>
+            <li><strong>Series opposing connection (recommended for receive):</strong> Connect the outer end of Wire A to the inner end of Wire B (or vice-versa). The remaining two free ends (inner of A and outer of B) become the differential output pair.</li>
+            <li>When a longitudinal E-field drives charge, current flows out one lead and returns on the other, so neighboring turns have opposite current direction → magnetic fields cancel.</li>
+            <li>Label the two free ends clearly (e.g., “+ / −” or “A-inner / B-outer”). The coil itself has essentially zero net inductance and low capacitance between the opposed turns.</li>
+        </ul>
+        <div class="note">Do not simply parallel the two wires; that would reinforce the magnetic field. The series-opposing (or “non-inductive bifilar”) connection is essential for the SLW gradient response.</div>
+    </div>
+
+    <div class="card">
+        <h2>5. Electrical Connection to Receiver / Analyzer</h2>
+        <p>The bifilar coil presents a balanced, low-inductance, moderately high-impedance differential port.</p>
+        <ul>
+            <li><strong>Direct connection (strong signals):</strong> Use a short balanced twisted-pair or twin-lead from the coil leads to a differential input, or to a 1:1 current balun / RF transformer, then into a 50 Ω coaxial cable to a spectrum analyzer (SA), vector network analyzer (VNA), or receiver.</li>
+            <li><strong>Weak signals:</strong> Insert a low-noise amplifier (LNA) or differential LNA as close as practical to the coil. Many experimenters use a wideband LNA (e.g., 0.1–6 GHz or higher) with good noise figure, followed by the SA/VNA/SDR.</li>
+            <li><strong>VNA:</strong> For S-parameter characterization of the receive coil itself, connect via balun to Port 1 or use a differential probe if available. Measure transmission relative to a reference path or the known stub transmitter.</li>
+            <li><strong>Spectrum analyzer / SDR / radio receiver:</strong> After any LNA and balun, feed the 50 Ω coax into the instrument. For decoding, use an SDR (software-defined radio) tuned to the carrier; for pure detection of the SLW presence, look for the expected frequency component that penetrates Faraday cages or shows anomalous attenuation behavior.</li>
+            <li>Keep all interconnects as short as possible and well shielded. Ground the outer conductor of the coax at a single point near the analyzer to avoid loops.</li>
+        </ul>
+        <div class="note">Because the ideal bifilar has near-zero inductance, classical matching networks based on inductive reactance are less relevant; the design relies on the gradient-driven current and the cancellation itself. Empirical tuning of lead length and a simple series capacitor or transformer may still improve coupling.</div>
+    </div>
+
+    <div class="card">
+        <h2>Quick Reference – Wire Data (approximate single-build film)</h2>
+        <table>
+            <tr><th>AWG</th><th>Bare diam.</th><th>Typical OD</th><th>Notes</th></tr>
+            <tr><td>22</td><td>0.0253 in / 0.643 mm</td><td>~0.027–0.029 in</td><td>Robust, easier to handle</td></tr>
+            <tr><td>24</td><td>0.0201 in / 0.511 mm</td><td>~0.022–0.024 in</td><td>Good compromise</td></tr>
+            <tr><td>26</td><td>0.0159 in / 0.404 mm</td><td>~0.017–0.019 in</td><td>Finer, more turns possible</td></tr>
+            <tr><td>28</td><td>0.0126 in / 0.320 mm</td><td>~0.014–0.016 in</td><td>Fine; handle carefully</td></tr>
+        </table>
+    </div>
+
+    <footer>
+        Design aid only — based on Hively US 9,306,527 conceptual bifilar geometry and standard RG-405/U & magnet-wire data.<br>
+        Verify all dimensions and connections experimentally. Not a substitute for the original patent or laboratory practice.
+    </footer>
+
+    <script>
+        const c = 299792458; // m/s
+        const wireData = {
+            22: { bareIn: 0.0253, odIn: 0.0280 },
+            24: { bareIn: 0.0201, odIn: 0.0232 },
+            26: { bareIn: 0.0159, odIn: 0.0185 },
+            28: { bareIn: 0.0126, odIn: 0.0151 }
+        };
+
+        function update() {
+            const fGHz = parseFloat(document.getElementById('freq').value);
+            const lambdaM = c / (fGHz * 1e9);
+            const lambdaMm = lambdaM * 1000;
+
+            document.getElementById('freqVal').textContent = fGHz.toFixed(2) + ' GHz';
+            document.getElementById('lambda').textContent = lambdaMm.toFixed(1) + ' mm (' + (lambdaM * 100).toFixed(1) + ' cm)';
+
+            // Stub
+            const stubFrac = parseFloat(document.getElementById('stubFrac').value);
+            document.getElementById('stubFracVal').textContent = (stubFrac === 0.25 ? 'λ/4 (0.25 λ)' : stubFrac.toFixed(2) + ' λ');
+            const stubLenMm = lambdaMm * stubFrac;
+            document.getElementById('stubLen').textContent = stubLenMm.toFixed(1) + ' mm';
+
+            // Coil
+            const odFrac = parseFloat(document.getElementById('odFrac').value);
+            document.getElementById('odFracVal').textContent = odFrac.toFixed(2) + ' λ';
+            const odMm = lambdaMm * odFrac;
+            document.getElementById('odMm').textContent = odMm.toFixed(1) + ' mm';
+
+            const awg = document.getElementById('awg').value;
+            const wd = wireData[awg];
+            const wireOdMm = wd.odIn * 25.4;
+            document.getElementById('wireOd').textContent = wireOdMm.toFixed(3) + ' mm (' + wd.odIn.toFixed(4) + ' in)';
+
+            const N = parseInt(document.getElementById('turns').value);
+            document.getElementById('turnsVal').textContent = N + ' turns';
+
+            // Each bifilar turn advances radially by ~2 × wire OD (two wires side-by-side)
+            const radialPerTurnMm = 2 * wireOdMm;
+            const radialBuildMm = N * radialPerTurnMm;
+            document.getElementById('radial').textContent = radialBuildMm.toFixed(1) + ' mm';
+
+            // Approximate ID = OD - 2 * radial build (conservative)
+            let idMm = odMm - 2 * radialBuildMm;
+            if (idMm < 5) idMm = 5; // practical minimum
+            document.getElementById('idMm').textContent = idMm.toFixed(1) + ' mm (approx start)';
+
+            // Approximate total wire length: average circumference × N × 2 wires
+            // Mean radius ≈ (OD + ID)/4  (radius)
+            const meanRadiusMm = (odMm + idMm) / 4;
+            const meanCircMm = 2 * Math.PI * meanRadiusMm;
+            const oneWireMm = meanCircMm * N;
+            const totalMm = oneWireMm * 2;
+            const totalM = totalMm / 1000;
+            const oneWireM = oneWireMm / 1000;
+
+            document.getElementById('oneWire').textContent = oneWireM.toFixed(2) + ' m (' + (oneWireMm / 10).toFixed(0) + ' cm)';
+            document.getElementById('totalLen').textContent = totalM.toFixed(2) + ' m  (buy ≥ ' + (totalM * 1.15).toFixed(2) + ' m)';
+
+            // ===== Near / Far field calculations =====
+            // D in meters
+            const dStubM = stubLenMm / 1000;          // use exposed stub length as D
+            const dCoilM = odMm / 1000;               // coil outer diameter as D
+
+            function formatDist(m) {
+                if (m < 0.001) return (m * 1e6).toFixed(1) + ' µm';
+                if (m < 1) return (m * 1000).toFixed(1) + ' mm';
+                if (m < 1000) return m.toFixed(2) + ' m';
+                return (m / 1000).toFixed(2) + ' km';
+            }
+
+            // Reactive near-field boundary ≈ 0.62 * sqrt(D³ / λ)
+            function reactiveNF(D, lambda) {
+                if (D <= 0) return 0;
+                return 0.62 * Math.sqrt((D * D * D) / lambda);
+            }
+            // Far-field boundary = 2 D² / λ
+            function farField(D, lambda) {
+                if (D <= 0) return 0;
+                return 2 * (D * D) / lambda;
+            }
+            // Electrically-small rule λ/(2π)
+            const smallRule = lambdaM / (2 * Math.PI);
+
+            // Stub
+            document.getElementById('dStub').textContent = formatDist(dStubM);
+            document.getElementById('nfStub').textContent = formatDist(reactiveNF(dStubM, lambdaM));
+            document.getElementById('ffStub').textContent = formatDist(farField(dStubM, lambdaM));
+            document.getElementById('smallStub').textContent = formatDist(smallRule);
+
+            // Coil
+            document.getElementById('dCoil').textContent = formatDist(dCoilM);
+            document.getElementById('nfCoil').textContent = formatDist(reactiveNF(dCoilM, lambdaM));
+            document.getElementById('ffCoil').textContent = formatDist(farField(dCoilM, lambdaM));
+            document.getElementById('smallCoil').textContent = formatDist(smallRule);
+        }
+
+        ['freq', 'stubFrac', 'odFrac', 'awg', 'turns'].forEach(id => {
+            document.getElementById(id).addEventListener('input', update);
+        });
+        update();
+    </script>
+</body>
+</html>
